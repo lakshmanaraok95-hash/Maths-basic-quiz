@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sum Sprint – a 60-second maths game</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;800&display=swap">
+<style>
+:root{
+  --bg:#eef3f8;--card:#fbfdff;--ink:#14213d;--muted:#5b6b85;--line:#cfdbe8;
+  --accent:#2f5bea;--on-accent:#fff;--good:#1f9d62;--bad:#d64045;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1b2d;--card:#14243b;--ink:#e8eef7;--muted:#97a8c3;--line:#223652;
+  --accent:#7aa2ff;--on-accent:#0f1b2d;--good:#46d18f;--bad:#ff7b7f;color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f1b2d;--card:#14243b;--ink:#e8eef7;--muted:#97a8c3;--line:#223652;
+  --accent:#7aa2ff;--on-accent:#0f1b2d;--good:#46d18f;--bad:#ff7b7f;color-scheme:dark;}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);
+  font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex;align-items:center;justify-content:center;padding:16px}
+.paper{width:100%;max-width:520px;background:var(--card);border:2px solid var(--ink);border-radius:18px;
+  padding:28px 24px;box-shadow:6px 6px 0 var(--ink);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:28px 28px;background-position:-1px -1px}
+h1{font-size:clamp(2rem,8vw,2.8rem);font-weight:800;margin:0 0 6px;letter-spacing:-.02em;line-height:1}
+p{margin:0 0 18px;color:var(--muted);line-height:1.5}
+[hidden]{display:none!important}
+.levels{display:grid;gap:10px;margin:18px 0}
+button{font:inherit;cursor:pointer;border:2px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);
+  padding:12px 16px;font-weight:600;text-align:left}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.level small{display:block;font-weight:400;color:var(--muted)}
+.level:hover{background:var(--accent);color:var(--on-accent)}
+.level:hover small{color:inherit}
+.primary{background:var(--accent);color:var(--on-accent);text-align:center;width:100%}
+.hud{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:600}
+.hud b{font-size:1.6rem;font-variant-numeric:tabular-nums}
+.bar{height:10px;border:2px solid var(--ink);border-radius:99px;margin:10px 0 24px;overflow:hidden;background:var(--card)}
+.bar i{display:block;height:100%;width:100%;background:var(--accent);transition:width .25s linear}
+.q{font-size:clamp(2.4rem,12vw,3.8rem);font-weight:800;text-align:center;margin:14px 0 20px;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em;transition:color .15s}
+.q.good{color:var(--good)}.q.bad{color:var(--bad)}
+.row{display:flex;gap:10px}
+input{flex:1;min-width:0;font:inherit;font-size:1.6rem;font-weight:600;text-align:center;padding:10px;
+  border:2px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink)}
+.row .primary{width:auto}
+.msg{min-height:1.5em;margin:12px 0 0;text-align:center;font-weight:600;color:var(--muted)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.stats div{border:2px solid var(--ink);border-radius:12px;padding:10px 12px;background:var(--card)}
+.stats b{display:block;font-size:1.8rem;font-variant-numeric:tabular-nums}
+.stats span{color:var(--muted);font-size:.9rem}
+.fig{text-align:center}.fig svg{width:100%;max-width:320px;height:auto}
+.s{stroke:var(--ink);stroke-width:2;fill:none;stroke-linejoin:round}
+.f{fill:var(--accent);fill-opacity:.4}.d{fill:var(--ink)}
+.t{fill:var(--ink);font:600 15px "Bricolage Grotesque",system-ui,sans-serif;text-anchor:middle}
+.q.sm{font-size:1.3rem;line-height:1.3;margin:6px 0 16px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="paper">
+
+<section id="start">
+  <h1>Sum Sprint</h1>
+  <p>You have 60 seconds (90 on the picture level). Answer as many as you can. Five right answers in a row raise your score multiplier, but a wrong answer costs 3 seconds.</p>
+  <div class="levels">
+    <button class="level" data-l="1">Warm-up<small>Adding and subtracting small numbers</small></button>
+    <button class="level" data-l="2">Steady<small>Bigger sums plus times tables up to 9</small></button>
+    <button class="level" data-l="3">Sprint<small>Times tables to 12, division and missing numbers</small></button>
+    <button class="level" data-l="4">Picture puzzles<small>Read diagrams: L-shapes, triangles, fractions, charts</small></button>
+  </div>
+  <p id="best" style="margin:0"></p>
+</section>
+
+<section id="play" hidden>
+  <div class="hud"><span>Score <b id="score">0</b></span><span id="mult"></span><span>Time <b id="time">60</b></span></div>
+  <div class="bar"><i id="fill"></i></div>
+  <div class="fig" id="fig"></div>
+  <div class="q" id="q" aria-live="polite"></div>
+  <div class="row">
+    <input id="ans" type="text" inputmode="numeric" pattern="-?[0-9]*" autocomplete="off" aria-label="Your answer">
+    <button class="primary" id="go">Check</button>
+  </div>
+  <div class="msg" id="msg"></div>
+</section>
+
+<section id="end" hidden>
+  <h1>Time’s up</h1>
+  <div class="stats">
+    <div><b id="fs">0</b><span>Final score</span></div>
+    <div><b id="fc">0</b><span>Correct answers</span></div>
+    <div><b id="fa">0%</b><span>Accuracy</span></div>
+    <div><b id="fb">0</b><span>Longest streak</span></div>
+  </div>
+  <p id="fbest"></p>
+  <button class="primary" id="again">Play again</button>
+</section>
+
+</main>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var R=function(a,b){return a+Math.floor(Math.random()*(b-a+1))};
+  var level=1,score=0,streak=0,best=0,right=0,total=0,time=60,maxT=60,answer=0,timer=null,locked=false;
+  var bests={1:0,2:0,3:0,4:0};
+  try{var s=localStorage.getItem("sumsprint-best");if(s)bests=JSON.parse(s)}catch(e){}
+
+  function showBest(){
+    var t=[];for(var l=1;l<=4;l++){if(bests[l])t.push(["Warm-up","Steady","Sprint","Pictures"][l-1]+": "+bests[l])}
+    $("best").textContent=t.length?"Your best scores – "+t.join(", "):"";
+  }
+  showBest();
+
+  var P=function(a){return a[R(0,a.length-1)]};
+  function sv(i,w,h){$("fig").innerHTML='<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Puzzle diagram">'+i+'</svg>'}
+  function tx(x,y,s){return '<text class="t" x="'+x+'" y="'+y+'">'+s+'</text>'}
+  function make4(){
+    var k=R(0,5),a,b,c,d,i,j,s="";
+    if(k===0){
+      a=R(8,15);b=R(7,12);c=R(2,a-3);d=R(2,b-3);
+      sv('<polygon class="s f" points="50,30 250,30 250,80 190,80 190,130 50,130"/>'+tx(150,22,a)+tx(30,85,b)+tx(220,102,c)+tx(172,108,d),300,150);
+      if(R(0,1)){answer=a*b-c*d;return "Area of this shape in cm²? (all lengths in cm)"}
+      answer=2*(a+b);return "Perimeter of this shape in cm? (all lengths in cm)";
+    }
+    if(k===1){
+      var T=P([[3,4,5],[5,12,13],[6,8,10],[8,15,17],[9,12,15],[7,24,25],[20,21,29]]),h=R(0,2);
+      answer=T[h];var lb=T.map(function(v,n){return n===h?"?":v});
+      sv('<polygon class="s f" points="60,140 240,140 60,30"/><path class="s" d="M60 122H78V140"/>'+tx(150,162,lb[0])+tx(36,90,lb[1])+tx(196,86,lb[2]),300,175);
+      return "Right-angled triangle: find the side marked ? (cm)";
+    }
+    if(k===2){
+      a=2*R(10,35);answer=(180-a)/2;
+      sv('<polygon class="s f" points="150,25 60,140 240,140"/><path class="s" d="M100 78l10 8M200 78l-10 8"/>'+tx(150,62,a+"°")+tx(96,131,"?"),300,155);
+      return "The two marked sides are equal. Find the angle ? in degrees";
+    }
+    if(k===3){
+      a=P([4,5,10,20]);b=R(1,a-1);
+      for(i=0;i<a;i++){var t1=-Math.PI/2+i*2*Math.PI/a,t2=t1+2*Math.PI/a;
+        s+='<path class="s'+(i<b?' f':'')+'" d="M150 95L'+(150+80*Math.cos(t1)).toFixed(1)+' '+(95+80*Math.sin(t1)).toFixed(1)+'A80 80 0 0 1 '+(150+80*Math.cos(t2)).toFixed(1)+' '+(95+80*Math.sin(t2)).toFixed(1)+'Z"/>'}
+      sv(s,300,190);
+      if(R(0,1)){answer=(a-b)*100/a;return "What percent of the circle is NOT shaded?"}
+      answer=b*100/a;return "What percent of the circle is shaded?";
+    }
+    if(k===4){
+      var tot=0;
+      for(i=0;i<3;i++){var r=R(2,5),cc=R(2,6),x0=10+i*98;tot+=r*cc;
+        s+='<rect class="s" x="'+x0+'" y="10" width="90" height="90" rx="6"/>';
+        for(j=0;j<r*cc;j++){s+='<circle class="d" cx="'+(x0+(j%cc+1)*90/(cc+1)).toFixed(1)+'" cy="'+(10+(Math.floor(j/cc)+1)*90/(r+1)).toFixed(1)+'" r="4"/>'}}
+      sv(s,300,110);answer=tot;return "How many dots are there in all three boxes?";
+    }
+    var m=R(26,45),dv=[R(-8,8),R(-8,8),R(-8,8)];dv.push(-(dv[0]+dv[1]+dv[2]));
+    s='<path class="s" d="M20 180H290"/>';
+    for(i=0;i<4;i++){var v=m+dv[i],hh=v*2.4;s+='<rect class="s f" x="'+(30+i*65)+'" y="'+(180-hh)+'" width="45" height="'+hh+'"/>'+tx(52+i*65,174-hh,v)}
+    sv(s,300,195);answer=m;return "What is the mean (average) of the four bar values?";
+  }
+
+  function make(){
+    var a,b,k;
+    if(level===4)return make4();
+    if(level===1){
+      k=R(0,1);a=R(2,20);b=R(1,20);
+      if(k===0){answer=a+b;return a+" + "+b}
+      if(b>a){var t=a;a=b;b=t}
+      answer=a-b;return a+" − "+b;
+    }
+    if(level===2){
+      k=R(0,2);
+      if(k===0){a=R(10,99);b=R(10,99);answer=a+b;return a+" + "+b}
+      if(k===1){a=R(30,99);b=R(10,a);answer=a-b;return a+" − "+b}
+      a=R(2,9);b=R(2,9);answer=a*b;return a+" × "+b;
+    }
+    k=R(0,3);
+    if(k===0){a=R(3,12);b=R(3,15);answer=a*b;return a+" × "+b}
+    if(k===1){b=R(2,12);answer=R(2,12);return (b*answer)+" ÷ "+b}
+    if(k===2){a=R(100,499);b=R(100,499);answer=a+b;return a+" + "+b}
+    a=R(11,89);b=R(11,89);answer=b;return a+" + ? = "+(a+b);
+  }
+
+  function next(){
+    $("fig").innerHTML="";$("q").textContent=make();
+    $("q").className="q"+(level===4?" sm":"");
+    $("ans").value="";
+    locked=false;
+    $("ans").focus();
+  }
+
+  function mult(){return 1+Math.floor(streak/5)}
+  function hud(){
+    $("score").textContent=score;
+    $("time").textContent=Math.max(0,time);
+    $("fill").style.width=Math.max(0,time)/maxT*100+"%";
+    $("mult").textContent=mult()>1?"×"+mult()+" bonus":"";
+  }
+
+  function start(l){
+    level=l;maxT=l===4?90:60;score=0;streak=0;best=0;right=0;total=0;time=maxT;
+    $("start").hidden=true;$("end").hidden=true;$("play").hidden=false;
+    $("msg").textContent="";hud();next();
+    clearInterval(timer);
+    timer=setInterval(function(){time--;hud();if(time<=0)finish()},1000);
+  }
+
+  function check(){
+    if(locked)return;
+    var v=$("ans").value.trim();
+    if(v===""||isNaN(Number(v)))return;
+    locked=true;total++;
+    if(Number(v)===answer){
+      right++;streak++;if(streak>best)best=streak;
+      score+=mult();
+      $("q").classList.add("good");
+      $("msg").textContent=streak>=5?streak+" in a row!":"Correct";
+      hud();setTimeout(function(){if(time>0)next()},250);
+    }else{
+      streak=0;time-=3;
+      $("q").classList.add("bad");
+      $("msg").textContent="The answer was "+answer+" (−3 seconds)";
+      hud();
+      if(time<=0){finish();return}
+      setTimeout(function(){if(time>0)next()},900);
+    }
+  }
+
+  function finish(){
+    clearInterval(timer);time=0;
+    $("play").hidden=true;$("end").hidden=false;
+    $("fs").textContent=score;$("fc").textContent=right;
+    $("fa").textContent=(total?Math.round(right/total*100):0)+"%";
+    $("fb").textContent=best;
+    if(score>(bests[level]||0)){
+      bests[level]=score;
+      $("fbest").textContent=score>0?"New best score for this level!":"";
+      try{localStorage.setItem("sumsprint-best",JSON.stringify(bests))}catch(e){}
+    }else{
+      $("fbest").textContent="Your best on this level is "+(bests[level]||0)+".";
+    }
+    showBest();
+  }
+
+  document.querySelectorAll(".level").forEach(function(b){
+    b.addEventListener("click",function(){start(Number(b.dataset.l))});
+  });
+  $("go").addEventListener("click",check);
+  $("ans").addEventListener("keydown",function(e){if(e.key==="Enter")check()});
+  $("again").addEventListener("click",function(){$("end").hidden=true;$("start").hidden=false});
+})();
+</script>
+</body>
+</html>
